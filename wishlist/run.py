@@ -1,4 +1,5 @@
 from datetime import datetime
+import argparse
 import os
 import pickle
 import requests
@@ -21,10 +22,13 @@ WISHLIST_COLUMN_NAMES = [
     'Operating Cash Flow per Share',
     'Net Income per Share',
     'Free Cash Flow per Share',
-
     'Book Value per Share',
     'Shareholders Equity per Share',
     'Graham Number',
+
+    'PE ratio',
+    'PFCF ratio',
+    'PB ratio',
 
     # growth metrics
     'EPS Growth',
@@ -36,7 +40,6 @@ WISHLIST_COLUMN_NAMES = [
     '5Y Net Income Growth (per Share)',
     '3Y Net Income Growth (per Share)',
 ]
-
 
 API_DOMAIN = 'https://financialmodelingprep.com'
 API_NAMESPACE = 'api'
@@ -52,27 +55,24 @@ PICKLE_EXT = '.pkl'
 SPREADSHEET_SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = '1yljf1CTj7aihKKFx-A3qGMPfvy0AYr1BK9ejWAhOmGI'
 GOOGLE_TOKEN_FILEPATH = './token' + PICKLE_EXT
-GOOGLE_CREDENTIALS_FILEPATH = '../../credentials.json'
+
+
+PRICE_FCF_RATIO = 'price to free cash flow ratio'
 
 
 def get_google_service():
     creds = None
-    print('vjw exists {}'.format(GOOGLE_TOKEN_FILEPATH))
     if os.path.exists(GOOGLE_TOKEN_FILEPATH):
         with open(GOOGLE_TOKEN_FILEPATH, 'rb') as token:
             creds = pickle.load(token)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            print('vjw expied')
             creds.refresh(Request())
         else:
-            print('vjw flow')
             flow = InstalledAppFlow.from_client_secrets_file(GOOGLE_CREDENTIALS_FILEPATH, SPREADSHEET_SCOPES)
             creds = flow.run_local_server()
         with open(GOOGLE_TOKEN_FILEPATH, 'wb') as token:
             pickle.dump(creds, token)
-    print('vjw creds')
-    print(creds)
     return build('sheets', 'v4', credentials=creds)
 
 
@@ -106,9 +106,9 @@ def derive_pickle_filepath(ticker):
 
 
 def pickle_cache(func):
-    def _(ticker):
+    def _(ticker, force=False):
         pickle_filepath = derive_pickle_filepath(ticker)
-        if os.path.isfile(pickle_filepath):
+        if os.path.isfile(pickle_filepath) and force is False:
             return load_from_disk(pickle_filepath)
         else:
             data = func(ticker)
@@ -136,7 +136,7 @@ def fetch_growth(ticker):
 
 
 @pickle_cache
-def fetch_metrics(ticker):
+def fetch_metrics(ticker, force=False):
     profile = fetch_company_profile(ticker)
     financials = fetch_financials(ticker)
     growth = fetch_growth(ticker)
@@ -148,12 +148,16 @@ def fetch_metrics(ticker):
     return metrics
 
 
+def calc_derived_metrics(metrics):
+    return {
+        PRICE_FCF_RATIO: metrics['Price'] / float(metrics['Free Cash Flow per Share'])
+    }
+
 def write_to_googlesheets(service, range, row, colnames=None):
     # Use colnames for order. Row is dictionary where colnames are keys.
     sheet = service.spreadsheets()
     row_values = [str(row[colname]) for colname in colnames]
     values = [row_values]
-    print(','.join(row_values))
     body = {
         'values': values
     }
@@ -163,6 +167,11 @@ def write_to_googlesheets(service, range, row, colnames=None):
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--googlesheets', action='store_true')
+    parser.add_argument('--force', action='store_true')
+    args = parser.parse_args()
+
     tickers = []
     with open(WISHLIST_TICKERS_FILEPATH, 'r') as f:
         for line in f.readlines():
@@ -170,7 +179,14 @@ if __name__ == '__main__':
     service = get_google_service()
     
     sheet_range = '{}!A'.format(datetime.today().date())
-    write_to_googlesheets(service, '{}1'.format(sheet_range), {colname: colname for colname in WISHLIST_COLUMN_NAMES}, WISHLIST_COLUMN_NAMES)
-    for i, ticker in zip(range(2, len(tickers)+2), tickers):
-        metrics = fetch_metrics(ticker)
-        write_to_googlesheets(service, '{}{}'.format(sheet_range, i), metrics, colnames=WISHLIST_COLUMN_NAMES)
+    writerows = []
+    writerows.append({colname: colname for colname in WISHLIST_COLUMN_NAMES})
+    for ticker in tickers:
+        metrics = fetch_metrics(ticker, args.force)
+        metrics.update(calc_derived_metrics(metrics))
+        writerows.append(metrics)
+
+    for i, writerow in zip(range(1, len(writerows)+1), writerows):
+        print(','.join([str(writerow[col]) for col in WISHLIST_COLUMN_NAMES]))
+        if args.googlesheets:
+            write_to_googlesheets(service, '{}{}'.format(sheet_range, i), writerow, WISHLIST_COLUMN_NAMES)
