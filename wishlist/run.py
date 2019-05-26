@@ -8,38 +8,19 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 
+COLUMNS_FILEPATH = './columns.txt'
+
+
+def get_columns():
+    columns = []
+    with open(COLUMNS_FILEPATH, 'r') as f:
+        for line in f.readlines():
+            columns.append(line.strip())
+    return columns
+
+
 WISHLIST_TICKERS_FILEPATH = './tickers.txt'
-WISHLIST_COLUMN_NAMES = [
-    'ticker',
-    'Price',
-    'sector',
-    'Beta',
-    'LastDiv',
-    'Range',
-
-    # key metrics
-    'Revenue per Share',
-    'Operating Cash Flow per Share',
-    'Net Income per Share',
-    'Free Cash Flow per Share',
-    'Book Value per Share',
-    'Shareholders Equity per Share',
-    'Graham Number',
-
-    'PE ratio',
-    'PFCF ratio',
-    'PB ratio',
-
-    # growth metrics
-    'EPS Growth',
-    'Free Cash Flow growth',
-    '10Y Revenue Growth (per Share)',
-    '5Y Revenue Growth (per Share)',
-    '3Y Revenue Growth (per Share)',
-    '10Y Net Income Growth (per Share)',
-    '5Y Net Income Growth (per Share)',
-    '3Y Net Income Growth (per Share)',
-]
+WISHLIST_COLUMN_NAMES = get_columns()
 
 API_DOMAIN = 'https://financialmodelingprep.com'
 API_NAMESPACE = 'api'
@@ -57,7 +38,7 @@ SPREADSHEET_ID = '1yljf1CTj7aihKKFx-A3qGMPfvy0AYr1BK9ejWAhOmGI'
 GOOGLE_TOKEN_FILEPATH = './token' + PICKLE_EXT
 
 
-PRICE_FCF_RATIO = 'price to free cash flow ratio'
+MY_NUMBER = "my number"
 
 
 def get_google_service():
@@ -148,10 +129,20 @@ def fetch_metrics(ticker, force=False):
     return metrics
 
 
+MY_PS = 2
+MY_PE = 15
+MY_PFCF = 10
+MY_PB = 4
 def calc_derived_metrics(metrics):
+    PS = max(float(metrics['Price to Sales Ratio']), 1)
+    PE = max(float(metrics['Net Income per Share']), 1)
+    FCF = max(float(metrics['Free Cash Flow per Share']), 1)
+    PB = max(float(metrics['Book Value per Share']), 1)
     return {
-        PRICE_FCF_RATIO: metrics['Price'] / float(metrics['Free Cash Flow per Share'])
+        MY_NUMBER: (MY_PE * MY_PFCF * MY_PB * PE * FCF * PB) ** (1/3),
+        'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker)
     }
+
 
 def write_to_googlesheets(service, range, row, colnames=None):
     # Use colnames for order. Row is dictionary where colnames are keys.

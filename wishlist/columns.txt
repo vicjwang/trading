@@ -1,0 +1,30 @@
+ticker
+Price
+my number
+sector
+Beta
+LastDiv
+Range
+Revenue per Share
+Net Income per Share
+Operating Cash Flow per Share
+Free Cash Flow per Share
+Book Value per Share
+Shareholders Equity per Share
+Graham Number
+Graham Net-Net
+Price to Sales Ratio
+PE ratio
+PFCF ratio
+PB ratio
+EPS Growth
+Free Cash Flow growth
+10Y Revenue Growth (per Share)
+5Y Revenue Growth (per Share)
+3Y Revenue Growth (per Share)
+10Y Net Income Growth (per Share)
+5Y Net Income Growth (per Share)
+3Y Net Income Growth (per Share)
+10Y Shareholders Equity Growth (per Share)
+5Y Shareholders Equity Growth (per Share)
+3Y Shareholders Equity Growth (per Share)
