@@ -8,6 +8,7 @@ NFLX
 V
 MA
 JPM
+SCHW
 AXP
 JNJ
 KO
