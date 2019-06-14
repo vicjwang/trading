@@ -1,6 +1,11 @@
 ticker
 Price
 my number
+DCF
+10 cap FCF
+ROE
+ROIC
+Debt to Equity
 sector
 Beta
 LastDiv
@@ -11,6 +16,7 @@ Operating Cash Flow per Share
 Free Cash Flow per Share
 Book Value per Share
 Shareholders Equity per Share
+Interest Debt per Share
 Graham Number
 Graham Net-Net
 Price to Sales Ratio
@@ -18,7 +24,10 @@ PE ratio
 PFCF ratio
 PB ratio
 EPS Growth
+Net Income Growth
 Free Cash Flow growth
+Book Value per Share Growth
+Debt Growth
 10Y Revenue Growth (per Share)
 5Y Revenue Growth (per Share)
 3Y Revenue Growth (per Share)
