@@ -12,6 +12,7 @@ PICKLE_EXT = '.pkl'
 GOOGLE_TOKEN_FILEPATH = './token' + PICKLE_EXT
 COLUMNS_FILEPATH = './columns.txt'
 DATA_DIR = './data'
+GOOGLE_CREDENTIALS_FILEPATH = 'credentials.json'
 
 
 def get_columns():
