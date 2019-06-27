@@ -80,3 +80,12 @@ def pickle_cache(func):
     return _
 
 
+def skip(func):
+    def _(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print('Skipping...', e, func)
+            return ''
+    return _
+

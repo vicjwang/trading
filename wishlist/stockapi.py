@@ -1,5 +1,6 @@
 import requests
 import os
+from utils import skip
 
 
 class StockApi:
@@ -143,28 +144,34 @@ class UnibitApi(StockApi):
         return super().fetch_cash_flow_statement(ticker, **query)['Cash Flow']
 
     @classmethod
+    @skip
     def get_date(cls, report):
         return report[cls.DATE_KEY]
 
     @classmethod
+    @skip
     def get_revenue(cls, report):
         return float(report[cls.REVENUE_KEY].replace(',', ''))
 
     @classmethod
+    @skip
     def get_net_income(cls, report):
         return float(report[cls.NET_INCOME_KEY].replace(',', ''))
 
     @classmethod
+    @skip
     def get_free_cash_flow(cls, report):
         ocf = report[cls.OCF_KEY].replace(',', '')
         capex = report[cls.CAPEX_KEY].replace(',', '')  # assumed negative
         return float(ocf) + float(capex)
 
     @classmethod
+    @skip
     def get_equity(cls, report):
         return float(report[cls.EQUITY_KEY].replace(',', ''))
 
     @classmethod
+    @skip
     def get_debt(cls, report):
         return float(report[cls.DEBT_KEY].replace(',', ''))
 
