@@ -1,8 +1,8 @@
 import argparse
 import os
 import requests
-from constants import *
 from utils import get_google_service, write_to_googlesheets
+from stockapi import UnibitApi, FinancialPrepApi
 
 
 SPREADSHEET_ID = '1NcHqaQ8w8gVvhxiHFw7u55qDAr7QYPEAew-muTjRMSs'
@@ -19,35 +19,22 @@ DEBT_COLUMN = 'debt'
 DEBT_GROWTH_COLUMN = 'debt growth'
 
 
-def fetch_income_statement(ticker):
-    url = os.path.join(API_DOMAIN, API_NAMESPACE, API_VERSION, INCOME_ENDPOINT, ticker)
-    resp = requests.get(url)
-    return resp.json()['financials']
-
-
-def fetch_balance_sheet_statement(ticker):
-    url = os.path.join(API_DOMAIN, API_NAMESPACE, API_VERSION, BALANCE_SHEET_ENDPOINT, ticker)
-    resp = requests.get(url)
-    return resp.json()['financials']
-
-
-def fetch_cash_flow_statement(ticker):
-    url = os.path.join(API_DOMAIN, API_NAMESPACE, API_VERSION, CASH_FLOW_ENDPOINT, ticker)
-    resp = requests.get(url)
-    return resp.json()['financials']
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('ticker')
-    args = parser.parse_args()
+def main(args):
     ticker = args.ticker
+    googlesheets = args.googlesheets
+    interval = args.interval
+    size = args.size
+
+#    if interval == 'quarterly':
+    api = UnibitApi()
+#    else:
+#        api = FinancialPrepApi()
 
     service = get_google_service()
 
-    incomes = fetch_income_statement(ticker)
-    balances = fetch_balance_sheet_statement(ticker)
-    cash_flows = fetch_cash_flow_statement(ticker)
+    incomes = api.fetch_income_statement(ticker, interval=interval, size=size)
+    balances = api.fetch_balance_sheet_statement(ticker, interval=interval, size=size)
+    cash_flows = api.fetch_cash_flow_statement(ticker, interval=interval, size=size)
 
     headers = [
       DATE_COLUMN,
@@ -65,34 +52,47 @@ if __name__ == '__main__':
     writerows = []
     writerows.append({header: header for header in headers})
 
-    for i, income, balance, cash_flow in zip(range(2, len(incomes)), incomes, balances, cash_flows):
-        date = income['date']
-        revenue = income['Revenue']
-        net_income = income['Net Income']
-        fcf = cash_flow['Free Cash Flow']
-        equity = balance['Total shareholders equity']
-        debt = balance['Total debt']
+    def _build_growth_formula(col, i):
+        return '=({col}{current}-{col}{prev})/{col}{prev}'.format(col=col, current=i+2, prev=i+3)
+
+    for i, income, balance, cash_flow in zip(range(len(incomes)), incomes, balances, cash_flows):
+        date = api.get_date(income)
+        revenue = api.get_revenue(income)
+        net_income = api.get_net_income(income)
+        fcf = api.get_free_cash_flow(cash_flow)
+        equity = api.get_equity(balance)
+        debt = api.get_debt(balance)
         
         writerow = {
           DATE_COLUMN: date, 
           REVENUE_COLUMN: revenue, 
-          REVENUE_GROWTH_COLUMN: '=(B{current}-B{prev})/B{prev}'.format(current=i, prev=i+1),
+          REVENUE_GROWTH_COLUMN: _build_growth_formula('B', i),
           NET_INCOME_COLUMN: net_income, 
-          NET_INCOME_GROWTH_COLUMN: '=(D{current}-D{prev})/D{prev}'.format(current=i, prev=i+1),
+          NET_INCOME_GROWTH_COLUMN: _build_growth_formula('D', i),
           FREE_CASH_FLOW_COLUMN: fcf, 
-          FCF_GROWTH_COLUMN: '=(F{current}-F{prev})/F{prev}'.format(current=i, prev=i+1),
+          FCF_GROWTH_COLUMN: _build_growth_formula('F', i),
           EQUITY_COLUMN: equity,
-          EQUITY_GROWTH_COLUMN: '=(H{current}-H{prev})/H{prev}'.format(current=i, prev=i+1),
+          EQUITY_GROWTH_COLUMN: _build_growth_formula('H', i),
           DEBT_COLUMN: debt,
-          DEBT_GROWTH_COLUMN: '=(J{current}-J{prev})/J{prev}'.format(current=i, prev=i+1),
+          DEBT_GROWTH_COLUMN: _build_growth_formula('J', i),
         }
         writerows.append(writerow)
 
-    for i, row in enumerate(writerows):
-        _range = '{}!A{}'.format(ticker, i+1)
-        write_to_googlesheets(service, SPREADSHEET_ID, _range, row, headers)
+    print('outlines: {}'.format(writerows))
+
+    if googlesheets:
+        for i, row in enumerate(writerows):
+            _range = '{}!A{}'.format(ticker, i+1)
+            write_to_googlesheets(service, SPREADSHEET_ID, _range, row, headers)
 
 
-    
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('ticker')
+    parser.add_argument('--googlesheets', action='store_true')
+    parser.add_argument('--interval', default='annual')
+    parser.add_argument('--size', default='10')
+    args = parser.parse_args()
 
+    main(args)
 
