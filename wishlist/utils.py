@@ -90,3 +90,9 @@ def skip(func):
             return ''
     return _
 
+
+def clean_float(func):
+    def _(*args, **kwargs):
+        return float(func(*args, **kwargs).replace(',', ''))*1000
+    return _
+        

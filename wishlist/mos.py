@@ -2,11 +2,15 @@ import argparse
 import os
 import requests
 from utils import get_google_service, write_to_googlesheets
-from stockapi import UnibitApi, FinancialPrepApi
+from stockapi import UnibitApi, FinancialPrepApi, AlphavantageApi
 
 
 SPREADSHEET_ID = '1NcHqaQ8w8gVvhxiHFw7u55qDAr7QYPEAew-muTjRMSs'
 DATE_COLUMN = 'date'
+PRICE_COLUMN = 'price'
+HIGH_PRICE_COLUMN = 'high'
+LOW_PRICE_COLUMN = 'low'
+SHARES_COLUMN = 'shares'
 REVENUE_COLUMN = 'revenue'
 REVENUE_GROWTH_COLUMN = 'revenue growth'
 NET_INCOME_COLUMN = 'net income'
@@ -17,6 +21,10 @@ EQUITY_COLUMN = 'equity'
 EQUITY_GROWTH_COLUMN = 'equity growth'
 DEBT_COLUMN = 'debt'
 DEBT_GROWTH_COLUMN = 'debt growth'
+PS_COLUMN = 'ps ratio'
+PE_COLUMN = 'pe ratio'
+PCFC_COLUMN = 'pfcf ratio'
+PB_COLUMN = 'pb ratio'
 
 
 def main(args):
@@ -25,16 +33,20 @@ def main(args):
     interval = args.interval
     size = args.size
 
+    stockapi = AlphavantageApi()
 #    if interval == 'quarterly':
-    api = UnibitApi()
+#    finapi = UnibitApi()
+    finapi = FinancialPrepApi()  #UnibitApi()
 #    else:
-#        api = FinancialPrepApi()
+#        finapi = FinancialPrepApi()
 
     service = get_google_service()
 
-    incomes = api.fetch_income_statement(ticker, interval=interval, size=size)
-    balances = api.fetch_balance_sheet_statement(ticker, interval=interval, size=size)
-    cash_flows = api.fetch_cash_flow_statement(ticker, interval=interval, size=size)
+    incomes = finapi.fetch_income_statement(ticker, interval=interval)
+    balances = finapi.fetch_balance_sheet_statement(ticker, interval=interval)
+    cash_flows = finapi.fetch_cash_flow_statement(ticker, interval=interval)
+#    price_history = stockapi.get_price_history(ticker)
+    metrics_history = finapi.fetch_company_metrics(ticker, interval=interval)
 
     headers = [
       DATE_COLUMN,
@@ -48,6 +60,15 @@ def main(args):
       EQUITY_GROWTH_COLUMN,
       DEBT_COLUMN,
       DEBT_GROWTH_COLUMN,
+      PS_COLUMN,
+      PE_COLUMN,
+      PCFC_COLUMN,
+      PB_COLUMN,
+
+#      SHARES_COLUMN,
+#      PRICE_COLUMN,
+#      HIGH_PRICE_COLUMN,
+#      LOW_PRICE_COLUMN,
     ]
     writerows = []
     writerows.append({header: header for header in headers})
@@ -55,14 +76,23 @@ def main(args):
     def _build_growth_formula(col, i):
         return '=({col}{current}-{col}{prev})/{col}{prev}'.format(col=col, current=i+2, prev=i+3)
 
-    for i, income, balance, cash_flow in zip(range(len(incomes)), incomes, balances, cash_flows):
-        date = api.get_date(income)
-        revenue = api.get_revenue(income)
-        net_income = api.get_net_income(income)
-        fcf = api.get_free_cash_flow(cash_flow)
-        equity = api.get_equity(balance)
-        debt = api.get_debt(balance)
-        
+    for i, income, balance, cash_flow, metrics in zip(range(len(incomes)), incomes, balances, cash_flows, metrics_history):
+        date = finapi.get_date(income)
+        revenue = finapi.get_revenue(income)
+        net_income = finapi.get_net_income(income)
+        fcf = finapi.get_free_cash_flow(cash_flow)
+        equity = finapi.get_equity(balance)
+        debt = finapi.get_debt(balance)
+        ps = finapi.get_ps(metrics)
+        pe = finapi.get_pe(metrics)
+        pfcf = finapi.get_pfcf(metrics)
+        pb = finapi.get_pb(metrics)
+
+#        price = stockapi.get_price(price_history, date)
+#        high = stockapi.get_price(price_history, date, 'high')
+#        low = stockapi.get_price(price_history, date, 'low')
+#        shares = finapi.get_shares(balance)
+#        
         writerow = {
           DATE_COLUMN: date, 
           REVENUE_COLUMN: revenue, 
@@ -75,6 +105,14 @@ def main(args):
           EQUITY_GROWTH_COLUMN: _build_growth_formula('H', i),
           DEBT_COLUMN: debt,
           DEBT_GROWTH_COLUMN: _build_growth_formula('J', i),
+#          SHARES_COLUMN: shares,
+#          PRICE_COLUMN: price,
+#          HIGH_PRICE_COLUMN: high,
+#          LOW_PRICE_COLUMN: low,
+          PS_COLUMN: ps,
+          PE_COLUMN: pe,
+          PCFC_COLUMN: pfcf,
+          PB_COLUMN: pb,
         }
         writerows.append(writerow)
 

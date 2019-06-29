@@ -1,6 +1,8 @@
+import arrow
 import requests
 import os
-from utils import skip, pickle_cache
+from datetime import datetime
+from utils import skip, pickle_cache, clean_float
 
 
 class StockApi:
@@ -55,6 +57,16 @@ class FinancialPrepApi(StockApi):
     FCF_KEY = 'Free Cash Flow'
     EQUITY_KEY = 'Total shareholders equity'
     DEBT_KEY = 'Total debt'
+
+    RPS_KEY = 'Revenue per Share'
+    EPS_KEY = 'Net Income per Share'
+    FCFPS_KEY = 'Free Cash Flow per Share'
+    BPS_KEY = 'Book Value per Share'
+
+    PS_KEY = 'Price to Sales Ratio'
+    PE_KEY = 'PE ratio'
+    PFCF_KEY = 'PFCF ratio'
+    PB_KEY = 'PB ratio'
  
     def _build_url(self, endpoint, ticker):
         return os.path.join(
@@ -69,10 +81,16 @@ class FinancialPrepApi(StockApi):
 
     def fetch_cash_flow_statement(self, ticker, interval=StockApi.ANNUAL_INTERVAL):
         return super(FinancialPrepApi, self).fetch_cash_flow_statement(ticker)['financials']
+
+    def fetch_company_metrics(self, ticker, interval=StockApi.ANNUAL_INTERVAL):
+        url = self._build_url(self.FINANCIALS_ENDPOINT, ticker)
+        resp = requests.get(url)
+        return resp.json()['metrics']
  
     @classmethod
     def get_date(cls, report):
-        return report[cls.DATE_KEY]
+        date = report[cls.DATE_KEY]
+        return date
 
     @classmethod
     def get_revenue(cls, report):
@@ -93,6 +111,22 @@ class FinancialPrepApi(StockApi):
     @classmethod
     def get_debt(cls, report):
         return report[cls.DEBT_KEY]
+
+    @classmethod
+    def get_ps(cls, metrics):
+        return metrics[cls.PS_KEY]
+
+    @classmethod
+    def get_pe(cls, metrics):
+        return metrics[cls.PE_KEY]
+
+    @classmethod
+    def get_pfcf(cls, metrics):
+        return metrics[cls.PFCF_KEY]
+
+    @classmethod
+    def get_pb(cls, metrics):
+        return metrics[cls.PB_KEY]
 
 
 class UnibitApi(StockApi):
@@ -145,34 +179,44 @@ class UnibitApi(StockApi):
     @classmethod
     @skip
     def get_date(cls, report):
-        return report[cls.DATE_KEY]
+        date = report[cls.DATE_KEY]
+        return datetime.strptime(date, '%m/%d/%Y').strftime('%Y-%m-%d')
 
     @classmethod
+    @clean_float
     @skip
     def get_revenue(cls, report):
-        return float(report[cls.REVENUE_KEY].replace(',', ''))
+        return report[cls.REVENUE_KEY]
 
     @classmethod
+    @clean_float
     @skip
     def get_net_income(cls, report):
-        return float(report[cls.NET_INCOME_KEY].replace(',', ''))
+        return report[cls.NET_INCOME_KEY]
 
     @classmethod
     @skip
     def get_free_cash_flow(cls, report):
         ocf = report[cls.OCF_KEY].replace(',', '')
         capex = report[cls.CAPEX_KEY].replace(',', '')  # assumed negative
-        return float(ocf) + float(capex)
+        return (float(ocf) + float(capex)) * 1000
 
     @classmethod
+    @clean_float
     @skip
     def get_equity(cls, report):
-        return float(report[cls.EQUITY_KEY].replace(',', ''))
+        return report[cls.EQUITY_KEY]
 
     @classmethod
+    @clean_float
     @skip
     def get_debt(cls, report):
-        return float(report[cls.DEBT_KEY].replace(',', ''))
+        return report[cls.DEBT_KEY]
+
+    @classmethod
+    @clean_float
+    def get_shares(cls, report):
+        return report[cls.OUTSTANDING_SHARES_KEY]
 
 
 class AlphavantageApi(StockApi):
@@ -198,13 +242,16 @@ class AlphavantageApi(StockApi):
         resp = requests.get(url)
         return resp.json()['Monthly Time Series']
 
-    def get_price(self, ticker, date):
-        history = self.get_price_history(ticker)
-        return history[date]
+    @classmethod
+    def get_price(cls, raw_history, date, key='close'):
+        history = {YYYYmmdd[:-3]: prices for YYYYmmdd, prices in list(raw_history.items())}
+        keys = ['open', 'high', 'low', 'close', 'volume']
+        labels = ['{}. {}'.format(i+1, key) for i, key in enumerate(keys)]
+        labelsByKeys = dict(zip(keys, labels))
+        YYYYmm = date[:-3]
+        return history[YYYYmm][labelsByKeys[key]]
 
 
 if __name__ == '__main__':
     api = AlphavantageApi()
-    print(api.get_price_history('aapl'))
-    print(api.get_price('aapl', '2019-03-29'))
 
