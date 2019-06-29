@@ -64,17 +64,18 @@ def load_from_disk(filepath):
     return data
 
 
-def derive_pickle_filepath(ticker):
-    return os.path.join(DATA_DIR, ticker + PICKLE_EXT)
+def derive_pickle_filepath(func, *args):
+    filename = '_'.join([func.__name__] + [str(arg) for arg in args])
+    return os.path.join(DATA_DIR, filename + PICKLE_EXT)
 
 
 def pickle_cache(func):
-    def _(ticker, force=False):
-        pickle_filepath = derive_pickle_filepath(ticker)
+    def _(*args, force=False):
+        pickle_filepath = derive_pickle_filepath(func, *args[1:])
         if os.path.isfile(pickle_filepath) and force is False:
             return load_from_disk(pickle_filepath)
         else:
-            data = func(ticker)
+            data = func(*args)
             save_to_disk(data, pickle_filepath)
             return data
     return _

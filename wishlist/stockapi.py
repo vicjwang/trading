@@ -1,6 +1,6 @@
 import requests
 import os
-from utils import skip
+from utils import skip, pickle_cache
 
 
 class StockApi:
@@ -56,9 +56,9 @@ class FinancialPrepApi(StockApi):
     EQUITY_KEY = 'Total shareholders equity'
     DEBT_KEY = 'Total debt'
  
-    def _build_url(self, endpofloat, ticker):
+    def _build_url(self, endpoint, ticker):
         return os.path.join(
-          self.API_DOMAIN, self.API_NAMESPACE, self.API_VERSION, endpofloat, ticker
+          self.API_DOMAIN, self.API_NAMESPACE, self.API_VERSION, endpoint, ticker
         )
 
     def fetch_income_statement(self, ticker, interval=StockApi.ANNUAL_INTERVAL):
@@ -117,10 +117,9 @@ class UnibitApi(StockApi):
     CAPEX_KEY = 'capitalExpenditures'
     OUTSTANDING_SHARES_KEY = 'commonStock'
 
+    ACCESS_KEY = os.environ['UNIBIT_ACCESS_KEY']
 
-    ACCESS_KEY = os.environ['UNIBIT_ACESS_KEY']
-
-    def _build_url(self, endpofloat, ticker):
+    def _build_url(self, endpoint, ticker):
         return os.path.join(
           self.API_DOMAIN, self.API_NAMESPACE, self.API_VERSION, ticker
         )
@@ -175,4 +174,37 @@ class UnibitApi(StockApi):
     def get_debt(cls, report):
         return float(report[cls.DEBT_KEY].replace(',', ''))
 
+
+class AlphavantageApi(StockApi):
+    API_DOMAIN = 'https://www.alphavantage.co'
+    API_NAMESPACE = 'query'
+    API_VERSION = ''
+ 
+    ACCESS_KEY = os.environ['ALPHAVANTAGE_API_KEY']
+
+    def _build_url(self, ticker):
+        return os.path.join(
+          self.API_DOMAIN, self.API_NAMESPACE, ticker
+        )
+  
+    @pickle_cache
+    def get_price_history(self, ticker):
+        query = {
+          'function': 'TIME_SERIES_MONTHLY',
+          'symbol': ticker,
+          'apikey': self.ACCESS_KEY,
+        }
+        url = self._append_query(self._build_url(ticker), **query)
+        resp = requests.get(url)
+        return resp.json()['Monthly Time Series']
+
+    def get_price(self, ticker, date):
+        history = self.get_price_history(ticker)
+        return history[date]
+
+
+if __name__ == '__main__':
+    api = AlphavantageApi()
+    print(api.get_price_history('aapl'))
+    print(api.get_price('aapl', '2019-03-29'))
 
