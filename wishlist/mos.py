@@ -34,11 +34,10 @@ def main(args):
     size = args.size
 
     stockapi = AlphavantageApi()
-#    if interval == 'quarterly':
-#    finapi = UnibitApi()
-    finapi = FinancialPrepApi()  #UnibitApi()
-#    else:
-#        finapi = FinancialPrepApi()
+    if interval == 'quarterly':
+        finapi = UnibitApi()
+    else:
+        finapi = FinancialPrepApi()
 
     service = get_google_service()
 
@@ -119,6 +118,7 @@ def main(args):
     print('outlines: {}'.format(writerows))
 
     if googlesheets:
+        print('Writing to googlesheets {} tab.'.format(ticker))
         for i, row in enumerate(writerows):
             _range = '{}!A{}'.format(ticker, i+1)
             write_to_googlesheets(service, SPREADSHEET_ID, _range, row, headers)

@@ -23,6 +23,7 @@ class StockApi:
     def fetch_income_statement(self, ticker, **query):
         url = self._append_query(self._build_url(self.INCOME_ENDPOINT, ticker), **query)
         resp = requests.get(url)
+        print('vjw', resp.json())
         return resp.json()
 
     def fetch_balance_sheet_statement(self, ticker, **query):
@@ -85,6 +86,7 @@ class FinancialPrepApi(StockApi):
     def fetch_company_metrics(self, ticker, interval=StockApi.ANNUAL_INTERVAL):
         url = self._build_url(self.FINANCIALS_ENDPOINT, ticker)
         resp = requests.get(url)
+        print('vjw co metrics', resp.json())
         return resp.json()['metrics']
  
     @classmethod
