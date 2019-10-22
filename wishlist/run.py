@@ -5,12 +5,8 @@ import os
 import requests
 from constants import *
 from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
+from stockapi import FinancialPrepApi
 
-
-SPREADSHEET_ID = '1yljf1CTj7aihKKFx-A3qGMPfvy0AYr1BK9ejWAhOmGI'
-
-WISHLIST_TICKERS_FILEPATH = './tickers.txt'
-WISHLIST_COLUMN_NAMES = get_columns()
 
 MY_NUMBER = "my number"
 
@@ -52,17 +48,20 @@ def fetch_discounted_cash_flow(ticker):
 
 
 @pickle_cache
-def fetch_metrics(ticker, force=False):
+def fetch_metrics(ticker):
     profile = fetch_company_profile(ticker)
     financials = fetch_financials(ticker)
     growth = fetch_growth(ticker)
     dcf = fetch_discounted_cash_flow(ticker)
+    finapi = FinancialPrepApi()
+    balance_sheet = finapi.fetch_balance_sheet_statement(ticker)[0]
     
     metrics = {'ticker': ticker}
     metrics.update(profile)
     metrics.update(financials)
     metrics.update(growth)
     metrics.update(dcf)
+    metrics.update(balance_sheet)
     return metrics
 
 
@@ -85,22 +84,27 @@ def calc_derived_metrics(metrics):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument('stock_type')
     parser.add_argument('--googlesheets', action='store_true')
     parser.add_argument('--force', action='store_true')
     args = parser.parse_args()
+    stock_type = args.stock_type
 
+    columns = get_columns(stock_type)
+
+    tickers_filepath = os.path.join(stock_type, TICKERS_FILEPATH)
     tickers = []
-    with open(WISHLIST_TICKERS_FILEPATH, 'r') as f:
+    with open(tickers_filepath, 'r') as f:
         for line in f.readlines():
             tickers.append(line.strip())
     service = get_google_service()
     
     sheet_range = '{}!A'.format(datetime.today().date())
     writerows = []
-    writerows.append({colname: colname for colname in WISHLIST_COLUMN_NAMES})
+    writerows.append({colname: colname for colname in columns})
     for ticker in tickers:
         try:
-          metrics = fetch_metrics(ticker, args.force)
+          metrics = fetch_metrics(ticker, force=args.force)
           metrics.update(calc_derived_metrics(metrics))
           writerows.append(metrics)
         except Exception as e:
@@ -108,6 +112,7 @@ if __name__ == '__main__':
           continue
 
     for i, writerow in zip(range(1, len(writerows)+1), writerows):
-        print(','.join([str(writerow[col]) for col in WISHLIST_COLUMN_NAMES]))
+        print(','.join([str(writerow[col]) for col in columns]))
         if args.googlesheets:
-            write_to_googlesheets(service, SPREADSHEET_ID, '{}{}'.format(sheet_range, i), writerow, WISHLIST_COLUMN_NAMES)
+            spreadsheet_id = SPREADSHEETS[stock_type]
+            write_to_googlesheets(service, spreadsheet_id, '{}{}'.format(sheet_range, i), writerow, columns)

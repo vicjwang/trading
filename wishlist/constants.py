@@ -12,3 +12,14 @@ JSON_DATATYPE = '?datatype=json'
 INCOME_ENDPOINT = 'financials/income-statement'
 BALANCE_SHEET_ENDPOINT = 'financials/balance-sheet-statement'
 CASH_FLOW_ENDPOINT = 'financials/cash-flow-statement'
+
+WISHLIST_SPREADSHEET_ID = '1yljf1CTj7aihKKFx-A3qGMPfvy0AYr1BK9ejWAhOmGI'
+DIVIDEND_SPREADSHEET_ID = '1JTe-XA72s2whTbFQ4ZyI338qRj5339oDMoeAuWL_PgM'
+
+TICKERS_FILEPATH = './tickers.txt'
+
+SPREADSHEETS = {
+  'dividend': DIVIDEND_SPREADSHEET_ID,
+  'growth': None,
+  'wishlist': WISHLIST_SPREADSHEET_ID
+}

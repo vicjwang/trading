@@ -1,0 +1,18 @@
+ticker
+Price
+Dividend Yield
+PE ratio
+ROE
+Debt to Equity
+sector
+LastDiv
+Payout Ratio
+Cash and cash equivalents
+Total debt
+3Y Dividend per Share Growth (per Share)
+5Y Dividend per Share Growth (per Share)
+10Y Dividend per Share Growth (per Share)
+Market Cap
+3Y Shareholders Equity Growth (per Share)
+5Y Shareholders Equity Growth (per Share)
+10Y Shareholders Equity Growth (per Share)

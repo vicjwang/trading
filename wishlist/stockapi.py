@@ -23,7 +23,6 @@ class StockApi:
     def fetch_income_statement(self, ticker, **query):
         url = self._append_query(self._build_url(self.INCOME_ENDPOINT, ticker), **query)
         resp = requests.get(url)
-        print('vjw', resp.json())
         return resp.json()
 
     def fetch_balance_sheet_statement(self, ticker, **query):
@@ -68,6 +67,8 @@ class FinancialPrepApi(StockApi):
     PE_KEY = 'PE ratio'
     PFCF_KEY = 'PFCF ratio'
     PB_KEY = 'PB ratio'
+
+    CASH_KEY = 'Cash and cash equivalents'
  
     def _build_url(self, endpoint, ticker):
         return os.path.join(
@@ -86,7 +87,6 @@ class FinancialPrepApi(StockApi):
     def fetch_company_metrics(self, ticker, interval=StockApi.ANNUAL_INTERVAL):
         url = self._build_url(self.FINANCIALS_ENDPOINT, ticker)
         resp = requests.get(url)
-        print('vjw co metrics', resp.json())
         return resp.json()['metrics']
  
     @classmethod
@@ -129,6 +129,10 @@ class FinancialPrepApi(StockApi):
     @classmethod
     def get_pb(cls, metrics):
         return metrics[cls.PB_KEY]
+
+    @classmethod
+    def get_cash(cls, metrics):
+        return metrics[cls.CASH_KEY]
 
 
 class UnibitApi(StockApi):

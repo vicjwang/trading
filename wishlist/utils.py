@@ -15,9 +15,10 @@ DATA_DIR = './data'
 GOOGLE_CREDENTIALS_FILEPATH = 'credentials.json'
 
 
-def get_columns():
+def get_columns(stock_type=None):
     columns = []
-    with open(COLUMNS_FILEPATH, 'r') as f:
+    columns_filepath = os.path.join(stock_type, COLUMNS_FILEPATH)
+    with open(columns_filepath, 'r') as f:
         for line in f.readlines():
             columns.append(line.strip())
     return columns
@@ -71,7 +72,7 @@ def derive_pickle_filepath(func, *args):
 
 def pickle_cache(func):
     def _(*args, force=False):
-        pickle_filepath = derive_pickle_filepath(func, *args[1:])
+        pickle_filepath = derive_pickle_filepath(func, *args)
         if os.path.isfile(pickle_filepath) and force is False:
             return load_from_disk(pickle_filepath)
         else:
