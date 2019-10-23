@@ -1,0 +1,15 @@
+ticker
+Price
+Price to Sales Ratio
+Debt to Equity
+Cash and cash equivalents
+Total debt
+SG&A to Revenue
+R&D to Revenue
+Market Cap
+3Y Revenue Growth (per Share)
+5Y Revenue Growth (per Share)
+3Y Net Income Growth (per Share)
+5Y Net Income Growth (per Share)
+3Y Shareholders Equity Growth (per Share)
+5Y Shareholders Equity Growth (per Share)
