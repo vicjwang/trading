@@ -23,20 +23,27 @@ def main():
     pass
 
 
+PERIOD_ANNUAL = 'annual'
+PERIOD_QUARTER = 'quarter'
+
 def fetch_company_profile(ticker):
     url = os.path.join(API_DOMAIN, API_NAMESPACE, PROFILE_ENDPOINT, ticker) + JSON_DATATYPE
     resp = requests.get(url)
     return resp.json()[ticker]
 
 
-def fetch_financials(ticker):
+def fetch_financials(ticker, period=PERIOD_ANNUAL):
     url = os.path.join(API_DOMAIN, API_NAMESPACE, API_VERSION, FINANCIALS_ENDPOINT, ticker) + JSON_DATATYPE
+    if period == 'quarter':
+        url += '&period=quarter'
     resp = requests.get(url)
     return resp.json()['metrics'][0]
 
 
-def fetch_growth(ticker):
+def fetch_growth(ticker, period=PERIOD_ANNUAL):
     url = os.path.join(API_DOMAIN, API_NAMESPACE, API_VERSION, GROWTH_ENDPOINT, ticker) + JSON_DATATYPE
+    if period == 'quarter':
+        url += '&period=quarter'
     resp = requests.get(url)
     return resp.json()['growth'][0]
 
@@ -48,13 +55,13 @@ def fetch_discounted_cash_flow(ticker):
 
 
 @pickle_cache
-def fetch_metrics(ticker):
+def fetch_metrics(ticker, period=PERIOD_ANNUAL):
     profile = fetch_company_profile(ticker)
-    financials = fetch_financials(ticker)
+    financials = fetch_financials(ticker, period=period)
     growth = fetch_growth(ticker)
     dcf = fetch_discounted_cash_flow(ticker)
     finapi = FinancialPrepApi()
-    balance_sheet = finapi.fetch_balance_sheet_statement(ticker)[0]
+    balance_sheet = finapi.fetch_balance_sheet_statement(ticker, interval=period)[0]
     
     metrics = {'ticker': ticker}
     metrics.update(profile)
@@ -87,8 +94,10 @@ if __name__ == '__main__':
     parser.add_argument('stock_type')
     parser.add_argument('--googlesheets', action='store_true')
     parser.add_argument('--force', action='store_true')
+    parser.add_argument('--quarter', action='store_true')
     args = parser.parse_args()
     stock_type = args.stock_type
+    period = PERIOD_QUARTER if args.quarter else PERIOD_ANNUAL
 
     columns = get_columns(stock_type)
 
@@ -103,8 +112,9 @@ if __name__ == '__main__':
     writerows = []
     writerows.append({colname: colname for colname in columns})
     for ticker in tickers:
+        print('Fetching {} data...'.format(ticker))
         try:
-          metrics = fetch_metrics(ticker, force=args.force)
+          metrics = fetch_metrics(ticker, force=args.force, period=period)
           metrics.update(calc_derived_metrics(metrics))
           writerows.append(metrics)
         except Exception as e:

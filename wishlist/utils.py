@@ -1,5 +1,6 @@
 import os
 import pickle
+from datetime import datetime
 
 
 from googleapiclient.discovery import build
@@ -65,18 +66,19 @@ def load_from_disk(filepath):
     return data
 
 
-def derive_pickle_filepath(func, *args):
-    filename = '_'.join([func.__name__] + [str(arg) for arg in args])
-    return os.path.join(DATA_DIR, filename + PICKLE_EXT)
+def derive_pickle_filepath(func, *args, **kwargs):
+    filename = '_'.join([func.__name__] + [str(arg) for arg in args] + ['{}-{}'.format(key, value) for key, value in kwargs.items()] + [datetime.now().strftime("%Y%b")])
+    filehash = str(hash(filename))
+    return os.path.join(DATA_DIR,  filehash + PICKLE_EXT)
 
 
 def pickle_cache(func):
-    def _(*args, force=False):
-        pickle_filepath = derive_pickle_filepath(func, *args)
+    def _(*args, force=False, **kwargs):
+        pickle_filepath = derive_pickle_filepath(func, *args, **kwargs)
         if os.path.isfile(pickle_filepath) and force is False:
             return load_from_disk(pickle_filepath)
         else:
-            data = func(*args)
+            data = func(*args, **kwargs)
             save_to_disk(data, pickle_filepath)
             return data
     return _

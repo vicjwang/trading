@@ -84,3 +84,5 @@ SRE
 XEL
 PEG
 ED
+HPQ
+HPE
