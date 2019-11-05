@@ -98,6 +98,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     stock_type = args.stock_type
     period = PERIOD_QUARTER if args.quarter else PERIOD_ANNUAL
+    assert os.environ['PYTHONHASHSEED']
 
     columns = get_columns(stock_type)
 

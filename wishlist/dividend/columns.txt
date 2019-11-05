@@ -2,6 +2,7 @@ ticker
 Price
 Dividend Yield
 PE ratio
+PB ratio
 ROE
 Debt to Equity
 sector

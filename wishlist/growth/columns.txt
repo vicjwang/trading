@@ -1,6 +1,7 @@
 ticker
 Price
 Price to Sales Ratio
+PB ratio
 Debt to Equity
 Cash and cash equivalents
 Total debt

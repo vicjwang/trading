@@ -54,6 +54,7 @@ def write_to_googlesheets(service, spreadsheetId, range, row, colnames):
 
 
 def save_to_disk(data, filepath):
+    print('Saving to {}'.format(filepath))
     with open(filepath, 'wb') as f:
         pickle.dump(data, f)
 
