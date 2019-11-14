@@ -3,6 +3,8 @@ from datetime import datetime
 import argparse
 import os
 import requests
+import time
+import traceback
 from constants import *
 from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
 from stockapi import FinancialPrepApi
@@ -95,9 +97,13 @@ if __name__ == '__main__':
     parser.add_argument('--googlesheets', action='store_true')
     parser.add_argument('--force', action='store_true')
     parser.add_argument('--quarter', action='store_true')
+    parser.add_argument('--offset', type=int, default=0)
+    parser.add_argument('--limit', type=int, default=None)
     args = parser.parse_args()
     stock_type = args.stock_type
     period = PERIOD_QUARTER if args.quarter else PERIOD_ANNUAL
+    offset = args.offset
+    limit = args.limit
     assert os.environ['PYTHONHASHSEED']
 
     columns = get_columns(stock_type)
@@ -108,11 +114,12 @@ if __name__ == '__main__':
         for line in f.readlines():
             tickers.append(line.strip())
     service = get_google_service()
+    end_index = len(tickers) if limit is None else offset + limit
     
     sheet_range = '{}!A'.format(datetime.today().date())
     writerows = []
     writerows.append({colname: colname for colname in columns})
-    for ticker in tickers:
+    for ticker in tickers[offset:end_index]:
         print('Fetching {} data...'.format(ticker))
         try:
           metrics = fetch_metrics(ticker, force=args.force, period=period)
@@ -124,6 +131,7 @@ if __name__ == '__main__':
 
     for i, writerow in zip(range(1, len(writerows)+1), writerows):
         print(','.join([str(writerow[col]) for col in columns]))
+        time.sleep(.1)
         if args.googlesheets:
             spreadsheet_id = SPREADSHEETS[stock_type]
             write_to_googlesheets(service, spreadsheet_id, '{}{}'.format(sheet_range, i), writerow, columns)

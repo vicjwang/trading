@@ -5,6 +5,7 @@ PE ratio
 PB ratio
 ROE
 Debt to Equity
+Market Cap
 sector
 LastDiv
 Payout Ratio
@@ -13,7 +14,6 @@ Total debt
 3Y Dividend per Share Growth (per Share)
 5Y Dividend per Share Growth (per Share)
 10Y Dividend per Share Growth (per Share)
-Market Cap
 3Y Shareholders Equity Growth (per Share)
 5Y Shareholders Equity Growth (per Share)
 10Y Shareholders Equity Growth (per Share)
