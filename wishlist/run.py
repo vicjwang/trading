@@ -31,7 +31,7 @@ PERIOD_QUARTER = 'quarter'
 def fetch_company_profile(ticker):
     url = os.path.join(API_DOMAIN, API_NAMESPACE, PROFILE_ENDPOINT, ticker) + JSON_DATATYPE
     resp = requests.get(url)
-    return resp.json()[ticker]
+    return resp.json().get(ticker, {})
 
 
 def fetch_financials(ticker, period=PERIOD_ANNUAL):
@@ -53,7 +53,7 @@ def fetch_growth(ticker, period=PERIOD_ANNUAL):
 def fetch_discounted_cash_flow(ticker):
     url = os.path.join(API_DOMAIN, API_NAMESPACE, API_VERSION, 'company', DCF_ENDPOINT, ticker) + JSON_DATATYPE
     resp = requests.get(url)
-    return {'DCF': resp.json()['DCF']}
+    return {'DCF': resp.json().get('DCF', '')}
 
 
 @pickle_cache
@@ -79,15 +79,22 @@ MY_PE = 14
 MY_PFCF = 8
 MY_PB = 3
 def calc_derived_metrics(metrics):
-    PS = float(metrics['Price to Sales Ratio'])
-    PE = float(metrics['Net Income per Share'])
-    FCF = float(metrics['Free Cash Flow per Share'])
-    PB = float(metrics['Book Value per Share'])
-    return {
-        MY_NUMBER: (MY_PE * MY_PFCF * MY_PB * max(PE, 1.0) * max(FCF, 1.0) * max(PB, 1.0)) ** (1/3),
-        'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker),
-        '10 cap FCF': 10.0*FCF,
-    }
+    try:
+        PS = float(metrics['Price to Sales Ratio'])
+        PE = float(metrics['Net Income per Share'])
+        FCF = float(metrics['Free Cash Flow per Share'])
+        PB = float(metrics['Book Value per Share'])
+        return {
+            MY_NUMBER: (MY_PE * MY_PFCF * MY_PB * max(PE, 1.0) * max(FCF, 1.0) * max(PB, 1.0)) ** (1/3),
+            'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker),
+            '10 cap FCF': 10.0*FCF,
+        }
+    except ValueError:
+        return {
+            MY_NUMBER: '',
+            'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker),
+            '10 cap FCF': '',
+        }
 
 
 if __name__ == '__main__':
@@ -99,11 +106,15 @@ if __name__ == '__main__':
     parser.add_argument('--quarter', action='store_true')
     parser.add_argument('--offset', type=int, default=0)
     parser.add_argument('--limit', type=int, default=None)
+    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--verbose', action='store_true')
     args = parser.parse_args()
     stock_type = args.stock_type
     period = PERIOD_QUARTER if args.quarter else PERIOD_ANNUAL
     offset = args.offset
     limit = args.limit
+    debug = args.debug
+    verbose = args.verbose
     assert os.environ['PYTHONHASHSEED']
 
     columns = get_columns(stock_type)
@@ -120,17 +131,22 @@ if __name__ == '__main__':
     writerows = []
     writerows.append({colname: colname for colname in columns})
     for ticker in tickers[offset:end_index]:
-        print('Fetching {} data...'.format(ticker))
+        if verbose:
+            print('Fetching {} data...'.format(ticker))
         try:
           metrics = fetch_metrics(ticker, force=args.force, period=period)
           metrics.update(calc_derived_metrics(metrics))
           writerows.append(metrics)
         except Exception as e:
-          print('{}: Failed to pull metrics for {}'.format(e, ticker))
+          if verbose:
+              print('{}: Failed to pull metrics for {}'.format(e, ticker))
+          if debug:
+              raise e
           continue
 
     for i, writerow in zip(range(1, len(writerows)+1), writerows):
-        print(','.join([str(writerow[col]) for col in columns]))
+        if verbose:
+            print(','.join([str(writerow.get(col, '')) for col in columns]))
         time.sleep(.1)
         if args.googlesheets:
             spreadsheet_id = SPREADSHEETS[stock_type]
