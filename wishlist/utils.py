@@ -44,7 +44,7 @@ def get_google_service():
 def write_to_googlesheets(service, spreadsheetId, range, row, colnames):
     # Use colnames for order. Row is dictionary where colnames are keys.
     sheet = service.spreadsheets()
-    row_values = [str(row[colname]) for colname in colnames]
+    row_values = [str(row.get(colname, '')) for colname in colnames]
     values = [row_values]
     body = {
         'values': values
