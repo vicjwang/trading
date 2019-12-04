@@ -1,0 +1,18 @@
+ticker
+Price
+Mean Price
+Revenue per Share
+Net Income per Share
+Operating Cash Flow per Share
+Free Cash Flow per Share
+Cash per Share
+Book Value per Share
+Price to Sales Ratio
+PE ratio
+PFCF ratio
+PB ratio
+ROE
+Debt to Equity
+Dividend Yield
+Market Cap
+sector

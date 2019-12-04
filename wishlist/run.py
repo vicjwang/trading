@@ -8,6 +8,7 @@ import traceback
 from constants import *
 from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
 from stockapi import FinancialPrepApi
+from metrics import calc_mean_price
 
 
 MY_NUMBER = "my number"
@@ -80,14 +81,15 @@ MY_PFCF = 8
 MY_PB = 3
 def calc_derived_metrics(metrics):
     try:
-        PS = float(metrics['Price to Sales Ratio'])
-        PE = float(metrics['Net Income per Share'])
-        FCF = float(metrics['Free Cash Flow per Share'])
-        PB = float(metrics['Book Value per Share'])
+        sps = float(metrics['Revenue per Share'])
+        eps = float(metrics['Net Income per Share'])
+        fcfps = float(metrics['Free Cash Flow per Share'])
+        bps = float(metrics['Book Value per Share'])
+        ocfps = float(metrics['Operating Cash Flow per Share'])
         return {
-            MY_NUMBER: (MY_PE * MY_PFCF * MY_PB * max(PE, 1.0) * max(FCF, 1.0) * max(PB, 1.0)) ** (1/3),
+            'Mean Price': calc_mean_price(sps, eps, ocfps, fcfps, bps, metrics['sector']),
             'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker),
-            '10 cap FCF': 10.0*FCF,
+            '10 cap FCF': 10.0*fcfps,
         }
     except ValueError:
         return {
@@ -100,7 +102,7 @@ def calc_derived_metrics(metrics):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('stock_type')
+    parser.add_argument('portfolio_name')
     parser.add_argument('--googlesheets', action='store_true')
     parser.add_argument('--force', action='store_true')
     parser.add_argument('--quarter', action='store_true')
@@ -109,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--verbose', action='store_true')
     args = parser.parse_args()
-    stock_type = args.stock_type
+    portfolio_name = args.portfolio_name
     period = PERIOD_QUARTER if args.quarter else PERIOD_ANNUAL
     offset = args.offset
     limit = args.limit
@@ -117,9 +119,9 @@ if __name__ == '__main__':
     verbose = args.verbose
     assert os.environ['PYTHONHASHSEED']
 
-    columns = get_columns(stock_type)
+    columns = get_columns(portfolio_name)
 
-    tickers_filepath = os.path.join(stock_type, TICKERS_FILEPATH)
+    tickers_filepath = os.path.join(portfolio_name, TICKERS_FILEPATH)
     tickers = []
     with open(tickers_filepath, 'r') as f:
         for line in f.readlines():
@@ -149,5 +151,5 @@ if __name__ == '__main__':
             print(','.join([str(writerow.get(col, '')) for col in columns]))
         time.sleep(.1)
         if args.googlesheets:
-            spreadsheet_id = SPREADSHEETS[stock_type]
+            spreadsheet_id = SPREADSHEETS[portfolio_name]
             write_to_googlesheets(service, spreadsheet_id, '{}{}'.format(sheet_range, i), writerow, columns)
