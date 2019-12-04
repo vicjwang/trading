@@ -8,8 +8,7 @@ import traceback
 from constants import *
 from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
 from stockapi import FinancialPrepApi, AlphavantageApi
-from metrics import calc_mean_price, get_google_price, calc_10cap_fcfps
-
+from metrics import calc_mean_price, get_google_price, calc_10cap_fcfps, calc_reverse_dcf_growth
 
 MY_NUMBER = "my number"
 
@@ -94,10 +93,15 @@ def calc_derived_metrics(metrics):
         fcfps = float(metrics['Free Cash Flow per Share'])
         bps = float(metrics['Book Value per Share'])
         ocfps = float(metrics['Operating Cash Flow per Share'])
+        
+        sector = metrics['sector']
+        mean_pe = MEAN_RATIOS[sector][PE_KEY]
+
         return {
             'Mean Price': calc_mean_price(sps, eps, ocfps, fcfps, bps, metrics['sector']),
             'Price': get_google_price(ticker),
             '10 cap FCF': calc_10cap_fcfps(fcfps),
+            'implied growth': calc_reverse_dcf_growth(ticker, eps, mean_pe),
         }
     except ValueError:
         return {

@@ -4,6 +4,7 @@ Mean Price
 10 cap FCF
 sma50
 sma200
+implied growth
 Price to Sales Ratio
 PE ratio
 PFCF ratio

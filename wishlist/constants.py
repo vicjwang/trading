@@ -45,8 +45,8 @@ POCF_KEY = 'POCF'
 
 MEAN_RATIOS = {
   TECHNOLOGY_SECTOR: {
-    PS_KEY: 10,
-    PE_KEY: 15,
+    PS_KEY: 2.5,
+    PE_KEY: 29.9,
     PB_KEY: 7.62,
     PFCF_KEY: 1/.0481,
     POCF_KEY: 19.2,
