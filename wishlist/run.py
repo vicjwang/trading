@@ -7,8 +7,8 @@ import time
 import traceback
 from constants import *
 from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
-from stockapi import FinancialPrepApi
-from metrics import calc_mean_price
+from stockapi import FinancialPrepApi, AlphavantageApi
+from metrics import calc_mean_price, get_google_price, calc_10cap_fcfps
 
 
 MY_NUMBER = "my number"
@@ -57,6 +57,16 @@ def fetch_discounted_cash_flow(ticker):
     return {'DCF': resp.json().get('DCF', '')}
 
 
+def fetch_sma(ticker):
+    api = AlphavantageApi()
+    sma200 = api.get_sma(ticker, 200)
+    sma50 = api.get_sma(ticker, 50)
+    return {
+      'sma200': sma200,
+      'sma50': sma50,
+    }
+
+
 @pickle_cache
 def fetch_metrics(ticker, period=PERIOD_ANNUAL):
     profile = fetch_company_profile(ticker)
@@ -65,6 +75,7 @@ def fetch_metrics(ticker, period=PERIOD_ANNUAL):
     dcf = fetch_discounted_cash_flow(ticker)
     finapi = FinancialPrepApi()
     balance_sheet = finapi.fetch_balance_sheet_statement(ticker, interval=period)[0]
+    sma = fetch_sma(ticker)
     
     metrics = {'ticker': ticker}
     metrics.update(profile)
@@ -72,13 +83,10 @@ def fetch_metrics(ticker, period=PERIOD_ANNUAL):
     metrics.update(growth)
     metrics.update(dcf)
     metrics.update(balance_sheet)
+    metrics.update(sma)
     return metrics
 
 
-MY_PS = 2
-MY_PE = 14
-MY_PFCF = 8
-MY_PB = 3
 def calc_derived_metrics(metrics):
     try:
         sps = float(metrics['Revenue per Share'])
@@ -88,12 +96,12 @@ def calc_derived_metrics(metrics):
         ocfps = float(metrics['Operating Cash Flow per Share'])
         return {
             'Mean Price': calc_mean_price(sps, eps, ocfps, fcfps, bps, metrics['sector']),
-            'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker),
-            '10 cap FCF': 10.0*fcfps,
+            'Price': get_google_price(ticker),
+            '10 cap FCF': calc_10cap_fcfps(fcfps),
         }
     except ValueError:
         return {
-            MY_NUMBER: '',
+            'Mean Price': '',
             'Price': '=GOOGLEFINANCE("{}", "price")'.format(ticker),
             '10 cap FCF': '',
         }

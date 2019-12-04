@@ -249,19 +249,19 @@ class AlphavantageApi(StockApi):
         return resp.json()['Monthly Time Series']
 
     @pickle_cache
-    def get_sma(self, ticker):
+    def get_sma(self, ticker, days):
         query = {
             'function': 'SMA',
             'symbol': ticker,
             'interval': 'daily',
-            'time_period': '200',
+            'time_period': str(days),
             'series_type': 'open',
             'apikey': self.ACCESS_KEY,
         }
         endpoint = 'query'
         url = self._append_query(self._build_url(endpoint), **query)
         resp = requests.get(url)
-        return resp.json()['']
+        return sorted(resp.json()['Technical Analysis: SMA'].items(), reverse=True)[0][1]['SMA']
 
     @classmethod
     def get_price(cls, raw_history, date, key='close'):

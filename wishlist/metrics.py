@@ -10,3 +10,10 @@ def calc_mean_price(sps, eps, ocfps, fcfps, bps, sector):
             * max(fcfps, 1) * mean_ratios[PFCF_KEY]
             * max(bps, 1) * mean_ratios[PB_KEY]) ** (1.0/5.0)
 
+
+def get_google_price(ticker):
+    return '=GOOGLEFINANCE("{}", "price")'.format(ticker)
+
+
+def calc_10cap_fcfps(fcfps):
+    return 10.0*fcfps
