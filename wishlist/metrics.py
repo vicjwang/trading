@@ -20,4 +20,4 @@ def calc_10cap_fcfps(fcfps):
 
 
 def calc_reverse_dcf_growth(ticker, eps, mean_pe):
-    return '=1.15*(GOOGLEFINANCE("{}", "price")/max(1, {})/{})^0.2-1'.format(ticker, eps, mean_pe)
+    return '=1.15*(GOOGLEFINANCE("{}", "price")/max(1, GOOGLEFINANCE("{}", "eps"))/{})^0.2-1'.format(ticker, ticker, mean_pe)
