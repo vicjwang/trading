@@ -8,7 +8,9 @@ import traceback
 from constants import *
 from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
 from stockapi import FinancialPrepApi, AlphavantageApi
-from metrics import calc_mean_price, get_google_price, calc_10cap_fcfps, calc_reverse_dcf_growth
+from metrics import (
+  calc_mean_price, calc_10cap_fcfps, calc_reverse_dcf_growth, get_google_attr, calc_mean_price_by_attr
+)
 
 MY_NUMBER = "my number"
 
@@ -88,7 +90,7 @@ def fetch_metrics(ticker, period=PERIOD_ANNUAL):
 
 def calc_derived_metrics(metrics):
     try:
-        sps = float(metrics['Revenue per Share'])
+        rps = float(metrics['Revenue per Share'])
         eps = float(metrics['Net Income per Share'])
         fcfps = float(metrics['Free Cash Flow per Share'])
         bps = float(metrics['Book Value per Share'])
@@ -96,12 +98,20 @@ def calc_derived_metrics(metrics):
         
         sector = metrics['sector']
         mean_pe = MEAN_RATIOS[sector][PE_KEY]
+        mean_fcf = MEAN_RATIOS[sector][PFCF_KEY]
 
         return {
-            'Mean Price': calc_mean_price(sps, eps, ocfps, fcfps, bps, metrics['sector']),
-            'Price': get_google_price(ticker),
+            'Mean Price': calc_mean_price(rps, eps, ocfps, fcfps, bps, metrics['sector']),
+            'Price': get_google_attr(ticker, 'price'),
             '10 cap FCF': calc_10cap_fcfps(fcfps),
-            'implied growth': calc_reverse_dcf_growth(ticker, eps, mean_pe),
+            'implied growth': calc_reverse_dcf_growth(ticker, fcfps, mean_pe),
+            'low52': get_google_attr(ticker, 'low52'),
+            'high52': get_google_attr(ticker, 'high52'),
+            'mean ps price': calc_mean_price_by_attr(sector, PS_KEY, rps),
+            'mean pe price': calc_mean_price_by_attr(sector, PE_KEY, eps),
+            'mean pfcf price': calc_mean_price_by_attr(sector, PFCF_KEY, fcfps),
+            'mean pb price': calc_mean_price_by_attr(sector, PB_KEY, bps),
+            'mean pocf price': calc_mean_price_by_attr(sector, POCF_KEY, ocfps),
         }
     except ValueError:
         return {

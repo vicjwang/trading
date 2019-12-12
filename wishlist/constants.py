@@ -29,7 +29,7 @@ SPREADSHEETS = {
 
 MATERIALS_SECTOR = 'Materials'
 INDUSTRIALS_SECTOR = 'Industrials'
-FINANCIALS_SECTOR = 'Financials'
+FINANCIALS_SECTOR = 'Financial Services'
 UTILITIES_SECTOR = 'Utilities'
 CONSUMER_DISCRETIONARY_SECTOR = 'Consumer Defensive'
 CONSUMER_STAPLES_SECTOR = 'Consumer Cyclical'

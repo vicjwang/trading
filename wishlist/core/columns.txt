@@ -1,14 +1,16 @@
 ticker
 Price
+implied growth
 Mean Price
 10 cap FCF
 sma50
 sma200
-implied growth
-Price to Sales Ratio
-PE ratio
-PFCF ratio
-PB ratio
+low52
+high52
+mean ps price
+mean pe price
+mean pfcf price
+mean pb price
 ROE
 Debt to Equity
 Dividend Yield
