@@ -6,7 +6,7 @@ import requests
 import time
 import traceback
 from constants import *
-from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets
+from utils import get_columns, get_google_service, pickle_cache, write_to_googlesheets, retry
 from stockapi import FinancialPrepApi, AlphavantageApi
 from metrics import (
   calc_mean_price, calc_10cap_fcfps, calc_reverse_dcf_growth, get_google_attr, calc_mean_price_by_attr
@@ -68,6 +68,7 @@ def fetch_sma(ticker):
     }
 
 
+@retry
 @pickle_cache
 def fetch_metrics(ticker, period=PERIOD_ANNUAL):
     profile = fetch_company_profile(ticker)
@@ -88,6 +89,7 @@ def fetch_metrics(ticker, period=PERIOD_ANNUAL):
     return metrics
 
 
+@retry
 def calc_derived_metrics(metrics):
     try:
         rps = float(metrics['Revenue per Share'])
@@ -99,12 +101,16 @@ def calc_derived_metrics(metrics):
         sector = metrics['sector']
         mean_pe = MEAN_RATIOS[sector][PE_KEY]
         mean_fcf = MEAN_RATIOS[sector][PFCF_KEY]
+        mean_ps = MEAN_RATIOS[sector][PS_KEY]
+
+        cash = metrics['Cash and cash equivalents']
+        market_cap = metrics['Market Cap']
 
         return {
             'Mean Price': calc_mean_price(rps, eps, ocfps, fcfps, bps, metrics['sector']),
             'Price': get_google_attr(ticker, 'price'),
             '10 cap FCF': calc_10cap_fcfps(fcfps),
-            'implied growth': calc_reverse_dcf_growth(ticker, fcfps, mean_pe),
+            'implied growth': calc_reverse_dcf_growth(ticker, mean_pe),
             'low52': get_google_attr(ticker, 'low52'),
             'high52': get_google_attr(ticker, 'high52'),
             'mean ps price': calc_mean_price_by_attr(sector, PS_KEY, rps),
@@ -112,7 +118,8 @@ def calc_derived_metrics(metrics):
             'mean pfcf price': calc_mean_price_by_attr(sector, PFCF_KEY, fcfps),
             'mean pb price': calc_mean_price_by_attr(sector, PB_KEY, bps),
             'mean pocf price': calc_mean_price_by_attr(sector, POCF_KEY, ocfps),
-        }
+            'price to cash': '{}/{}'.format(get_google_attr(ticker, 'marketcap'), cash),
+}
     except ValueError:
         return {
             'Mean Price': '',
@@ -147,6 +154,8 @@ if __name__ == '__main__':
     tickers = []
     with open(tickers_filepath, 'r') as f:
         for line in f.readlines():
+            if line.startswith('#') or not line.strip():
+                continue
             tickers.append(line.strip())
     service = get_google_service()
     end_index = len(tickers) if limit is None else offset + limit

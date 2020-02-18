@@ -23,8 +23,10 @@ def calc_10cap_fcfps(fcfps):
     return 10.0*fcfps
 
 
-def calc_reverse_dcf_growth(ticker, cf, mean_pe):
-    return '=1.15*(GOOGLEFINANCE("{}", "price")/max(1, GOOGLEFINANCE("{}", "eps"))/{})^0.2-1'.format(ticker, ticker, mean_pe)
+def calc_reverse_dcf_growth(ticker, mean_ratio, cf=None):
+    if cf is None:
+        cf = 'GOOGLEFINANCE("{ticker}", "eps")'.format(ticker=ticker)
+    return '=1.15*(GOOGLEFINANCE("{ticker}", "price")/max(1, {cf})/{mean_ratio})^0.2-1'.format(ticker=ticker, cf=cf, mean_ratio=mean_ratio)
 
 
 def get_google_low52(ticker):

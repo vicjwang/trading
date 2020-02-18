@@ -1,3 +1,7 @@
+AAPL
+MCK
+DIS
+
 AHC
 JCAP
 MET

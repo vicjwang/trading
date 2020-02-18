@@ -1,5 +1,6 @@
 import os
 import pickle
+import time
 from datetime import datetime
 
 
@@ -99,4 +100,17 @@ def clean_float(func):
     def _(*args, **kwargs):
         return float(func(*args, **kwargs).replace(',', ''))*1000
     return _
-        
+       
+
+def retry(func):
+    def _(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            now = datetime.now()
+            sleep_seconds = 1
+            while datetime.now().minute == now.minute:
+                time.sleep(sleep_seconds)
+                sleep_seconds *= 2
+            return func(*args, **kwargs)
+    return _

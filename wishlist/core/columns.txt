@@ -14,5 +14,6 @@ mean pb price
 ROE
 Debt to Equity
 Dividend Yield
+price to cash
 Market Cap
 sector
