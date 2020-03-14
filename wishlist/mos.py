@@ -4,8 +4,7 @@ import requests
 from utils import get_google_service, write_to_googlesheets
 from stockapi import UnibitApi, FinancialPrepApi, AlphavantageApi
 
-
-SPREADSHEET_ID = '1NcHqaQ8w8gVvhxiHFw7u55qDAr7QYPEAew-muTjRMSs'
+SPREADSHEET_ID = '16mECdYtwd28_Jc2idft2wW8Y8LFEPbzIeW6oHZ-5qNo'
 DATE_COLUMN = 'date'
 PRICE_COLUMN = 'price'
 HIGH_PRICE_COLUMN = 'high'
