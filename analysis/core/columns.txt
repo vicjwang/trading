@@ -3,6 +3,8 @@ Price
 implied growth
 Mean Price
 10 cap FCF
+market mean price
+lynch value
 sma50
 sma200
 low52
@@ -15,5 +17,6 @@ ROE
 Debt to Equity
 Dividend Yield
 price to cash
+Net Debt to EBITDA
 Market Cap
 sector

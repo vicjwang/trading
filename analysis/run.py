@@ -105,12 +105,15 @@ def calc_derived_metrics(metrics):
 
         cash = metrics['Cash and cash equivalents']
         market_cap = metrics['Market Cap']
+        implied_growth = calc_reverse_dcf_growth(ticker, mean_pe)
 
         return {
             'Mean Price': calc_mean_price(rps, eps, ocfps, fcfps, bps, metrics['sector']),
             'Price': get_google_attr(ticker, 'price'),
             '10 cap FCF': calc_10cap_fcfps(fcfps),
-            'implied growth': calc_reverse_dcf_growth(ticker, mean_pe),
+            'implied growth': implied_growth,
+            'market mean price': eps * 15,
+            'lynch value': eps * float(metrics['10Y Net Income Growth (per Share)']) * 100,
             'low52': get_google_attr(ticker, 'low52'),
             'high52': get_google_attr(ticker, 'high52'),
             'mean ps price': calc_mean_price_by_attr(sector, PS_KEY, rps),
