@@ -2,7 +2,7 @@ from constants import MEAN_RATIOS, PS_KEY, PE_KEY, PB_KEY, PFCF_KEY, POCF_KEY
 
 
 
-def calc_mean_price(sps, eps, ocfps, fcfps, bps, sector):
+def calc_composite_mean_price(sps, eps, ocfps, fcfps, bps, sector):
     mean_ratios = MEAN_RATIOS[sector]
     return (max(sps, 1) * mean_ratios[PS_KEY]
             * max(eps, 1) * mean_ratios[PE_KEY]

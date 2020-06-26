@@ -54,6 +54,15 @@ def write_to_googlesheets(service, spreadsheetId, range, row, colnames):
         spreadsheetId=spreadsheetId, range=range, valueInputOption='USER_ENTERED', body=body).execute()
 
 
+def write_rows_to_googlesheets(rows, columns, spreadsheet_id, sheet_name, verbose=False):
+    sheet_range = '{}!A'.format(sheet_name)
+    service = get_google_service()
+    for i, writerow in zip(range(1, len(rows)+1), rows):
+        if verbose:
+            print(','.join([str(writerow.get(col, '')) for col in columns]))
+        time.sleep(.1)
+        write_to_googlesheets(service, spreadsheet_id, '{}{}'.format(sheet_range, i), writerow, columns)
+
 def save_to_disk(data, filepath):
     print('Saving to {}'.format(filepath))
     with open(filepath, 'wb') as f:
@@ -113,4 +122,11 @@ def retry(func):
                 time.sleep(sleep_seconds)
                 sleep_seconds *= 2
             return func(*args, **kwargs)
+    return _
+
+
+def nonnegative_or_blank(func):
+    def _(*args, **kwargs):
+        ret = func(*args, **kwargs)
+        return ret if ret >= 0 else ''
     return _

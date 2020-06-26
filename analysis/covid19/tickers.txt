@@ -1,0 +1,85 @@
+PBF
+JEF
+AER
+TDS
+MUR
+EQT
+MOS
+MCFT
+IGT
+
+GT
+FTI
+GBDC
+X
+TECK
+
+AA
+MAXR
+TLRD
+MIK
+
+KRO
+MEI
+STLD
+VSEC
+HOFT
+ET
+ZNGA
+BBBY
+HP
+CTL
+JWN
+CLDR
+TRIP
+REZI
+
+
+UAA
+ERIC
+
+#events
+EB
+LYV
+
+# cruises
+CCL
+RCL 
+NCLH
+
+# travel services
+
+# auto
+GM
+F
+FCAU
+
+# tech
+HP
+
+# gold
+EGO
+
+# airlines
+UAL
+JBLU
+SKYW
+
+# energy
+MRO
+OXY
+
+# hotels
+HLT
+H
+MAR
+
+# retail
+M
+ROST
+GME 
+KSS
+DDS
+
+# casinos
+MGM

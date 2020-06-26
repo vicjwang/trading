@@ -3,7 +3,7 @@
 API_DOMAIN = 'https://financialmodelingprep.com'
 API_NAMESPACE = 'api'
 API_VERSION = 'v3'
-PROFILE_ENDPOINT = 'company/profile'
+PROFILE_ENDPOINT = 'profile'
 FINANCIALS_ENDPOINT = 'company-key-metrics'
 GROWTH_ENDPOINT = 'financial-statement-growth'
 RATIOS_ENDPOINT = 'financial-ratios'

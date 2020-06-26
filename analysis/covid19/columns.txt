@@ -1,9 +1,12 @@
 ticker
 Price
 implied growth
+#
 composite sector mean price
-10 cap FCF
+DCF
 15x pe
+10 cap FCF
+Book Value per Share
 lynch value
 sma50
 sma200
@@ -19,11 +22,14 @@ sector mean ps price
 sector mean pe price
 sector mean pfcf price
 sector mean pb price
-ROE
+Tangible Book Value per Share
+Shareholders Equity per Share
+Cash per Share
 Debt to Equity
-Dividend Yield
-price to cash
+Debt to Assets
 Current ratio
+Graham Number
+Graham Net-Net
 Net Debt to EBITDA
 Market Cap
 sector

@@ -24,6 +24,14 @@ PS_COLUMN = 'ps ratio'
 PE_COLUMN = 'pe ratio'
 PCFC_COLUMN = 'pfcf ratio'
 PB_COLUMN = 'pb ratio'
+RPS_COLUMN = 'Revenue per Share'
+EPS_COLUMN = 'Net Income per Share'
+OCFPS_COLUMN = 'Operating Cash Flow per Share'
+FCFPS_COLUMN = 'Free Cash Flow per Share'
+CPS_COLUMN = 'Cash per Share'
+BPS_COLUMN = 'Book Value per Share'
+MARKET_CAP_COLUMN = 'Market Cap'
+EV_COLUMN = 'Enterprise Value'
 
 
 def main(args):
@@ -62,8 +70,16 @@ def main(args):
       PE_COLUMN,
       PCFC_COLUMN,
       PB_COLUMN,
+      RPS_COLUMN,
+      EPS_COLUMN,
+      OCFPS_COLUMN,
+      FCFPS_COLUMN,
+      CPS_COLUMN,
+      BPS_COLUMN,
 
-#      SHARES_COLUMN,
+      MARKET_CAP_COLUMN,
+      EV_COLUMN,
+      SHARES_COLUMN,
 #      PRICE_COLUMN,
 #      HIGH_PRICE_COLUMN,
 #      LOW_PRICE_COLUMN,
