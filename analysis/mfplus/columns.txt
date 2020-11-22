@@ -1,0 +1,19 @@
+ticker
+Price
+implied growth
+Mean Price
+10 cap FCF
+sma50
+sma200
+low52
+high52
+mean ps price
+mean pe price
+mean pfcf price
+mean pb price
+ROE
+Debt to Equity
+Dividend Yield
+price to cash
+Market Cap
+sector
